@@ -31,12 +31,13 @@
 
 typedef struct Character {
     // TODO: Add data members here
-    
-    
-    
-    
+    char name[50];
+    int health;
+    int level;
+
     // TODO: Add function pointer members here
-    
+    void (*attack)(struct Character* self);
+    void (*take_damage)(struct Character* self, int damage);
     
 } Character;
 
@@ -53,14 +54,18 @@ typedef struct Character {
 // Hint: void character_attack(Character* self) { ... }
 
 
-
+void character_attack(struct Character* self) { 
+    printf("%s performs a basic attack!\n", self->name);
+}
 
 // TODO: Implement character_take_damage function
 // This function should:
 // - Accept a Character* pointer and an int damage
 // - Reduce the character's health by the damage amount
 // - Print: "[name] takes [damage] damage! Health: [remaining health]"
-
+void character_take_damage(Character* self, int damage) { 
+    printf("%s takes %d damage! Health %d\n", self->name, damage, self->health);
+} 
 
 
 
@@ -72,9 +77,15 @@ typedef struct Character {
 // - Initialize attack function pointer to character_attack
 // - Initialize take_damage function pointer to character_take_damage
 // Hint: strncpy(dest, src, size) and remember to null-terminate
+void character_init(Character* self, const char* name, int health, int level) {
+    strncpy(self->name, name, 49);
+    self->name[49] = '\0';
+    self->health= health;
+    self->level= level;
+    self->attack= character_attack;
+    self->take_damage= character_take_damage;
 
-
-
+}
 
 
 
@@ -92,9 +103,10 @@ typedef struct Character {
 
 typedef struct Warrior {
     // TODO: Add Character base as first member
-    
+    Character base;
     
     // TODO: Add Warrior-specific data
+    int strength;
     
 } Warrior;
 
@@ -105,9 +117,10 @@ typedef struct Warrior {
 
 typedef struct Mage {
     // TODO: Add Character base as first member
-    
+    Character base;
     
     // TODO: Add Mage-specific data
+    int mana;
     
 } Mage;
 
@@ -124,6 +137,11 @@ typedef struct Mage {
 // - Print: "[name] swings sword with [strength] strength!"
 // Hint: Warrior* w = (Warrior*)self;
 
+void warrior_attack(Character* self){
+    Warrior* w = (Warrior*)self;
+
+    printf("%s swings sword with %d strength!\n", w->base.name, w->strength);
+}
 
 
 
@@ -136,8 +154,19 @@ typedef struct Mage {
 // - Print: "[name] casts fireball using [mana] mana!"
 // - If mana is below 10, print: "[name] is out of mana!"
 
+void mage_attack(Character* self){
+    Mage* m = (Mage*)self;
+    
 
+    if(m->mana < 10){
+        printf("%s is out of mana!\n", m->base.name);
+    } else {
+        m->mana -= 10;
+        printf("%s casts fireball using %d mana!\n", m->base.name, m->mana);
+    }
+    
 
+}
 
 
 // TODO: Implement warrior_init function (constructor)
@@ -149,9 +178,12 @@ typedef struct Mage {
 // Hint: To initialize base: character_init(&w->base, name, health, level);
 // Then override: w->base.attack = warrior_attack;
 
+void warrior_init(Warrior* w, const char* name, int health, int level, int strength) {
+    character_init(&w->base, name, health, level);
 
-
-
+    w->strength = strength;
+    w->base.attack = warrior_attack;
+}
 
 
 
@@ -163,6 +195,12 @@ typedef struct Mage {
 // - Override the attack function pointer to point to mage_attack
 
 
+void mage_init(Mage* m, const char* name, int health, int level, int mana) {
+    character_init(&m->base, name, health, level);
+
+    m->mana = mana;
+    m->base.attack = mage_attack;
+}
 
 
 
@@ -188,8 +226,34 @@ int main() {
     //    in an array and calling attack on each
     
     
+    Character j;
+    character_init(&j, "John", 100, 1);
+    j.attack(&j);
+    j.take_damage(&j, 25);
+
+    Warrior b;
+    warrior_init(&b, "Bob", 200, 10, 20);
+    b.base.attack(&b.base);
+
+    Mage m;
+    mage_init(&m, "Mary", 75, 8, 80);
+    m.base.attack(&m.base);
+    m.base.attack(&m.base);
+    m.base.attack(&m.base);
+
     
-    
+    Character* party[3] = {
+    &j,
+    (Character*)&b,
+    (Character*)&m  
+    };
+
+    for (int i = 0; i < 3; i++) {
+        party[i]->attack(party[i]);  
+    }
+
+    return 0;
+
     
     
     
